@@ -1,12 +1,28 @@
-let contents, main, converter, current, cItems;
+let tmt, icon, contents, commands, main, converter, current, cItems;
 
 function load() {
+    tmt = document.querySelector("tmt")
+    icon = document.querySelector("tmt div")
     contents = document.querySelector("contents")
+    commands = document.querySelector("commands")
     main = document.querySelector("main")
     converter = new showdown.Converter()
     current = {}
     cItems = contents.childNodes
     
+    tmt.addEventListener('click', function() {
+        if (document.body.classList.contains("compact")) {
+            commands.classList.remove("active")
+            contents.classList.toggle("active")
+        }
+    });
+    document.querySelector("button.menu-button").addEventListener('click', function() {
+        if (document.body.classList.contains("compact2")) {
+            contents.classList.remove("active")
+            commands.classList.toggle("active")
+        }
+    });
+
     
     window.addEventListener('popstate', function() {
         var lHash = location.hash || "#home"
@@ -14,23 +30,25 @@ function load() {
         if (lHash != mHash)
             readHash(location.hash)
     });
+    window.addEventListener('resize', computeStyle);
 
     readItems(toArray(cItems), true)
     readHash(location.hash || "#home")
+    computeStyle()
 }
 
 function readFile(url) {
     let elem = url.srcElement
     url = elem.getAttribute("href");
     location.hash = "#" + elem.getAttribute("hash");
-    document.title = elem.innerText + " - Modding Tree Docs";
+    document.title = elem.innerText + " - The Modding Tree Docs";
     let client = new XMLHttpRequest();
     client.open('GET', url.replace("$", "https://raw.githubusercontent.com/Acamaeda/The-Modding-Tree/master/docs/"));
     client.onreadystatechange = function() {
         main.innerHTML = converter.makeHtml(client.responseText).replace(/<a\shref="(\S+\.md*?)">/g, (x, p1) => {
             let p = url.replace(/(.*[\\\/$]).+$/s, "$1")
             let u = p + p1.replace(/^[/\\]+/s, "")
-            console.log(x + " " + p1 + " " + url + " " + p)
+            // console.log(x + " " + p1 + " " + url + " " + p)
             let e = contents.querySelector("item[href='" + u + "']")
             if (!e) return `<a href="${p1}">`
             let l = location
@@ -41,6 +59,7 @@ function readFile(url) {
         if (current && current.classList) current.classList.remove("current")
         current = elem
         current.classList.add("current")
+        contents.classList.remove("active")
     }
     client.send();
 }
@@ -71,4 +90,11 @@ function readItems(items, first = false) {
             }
         }
     }
+}
+
+function computeStyle() {
+    let cs = window.getComputedStyle(icon)
+    let width = window.innerWidth / parseInt(cs.width)
+    document.body.classList.toggle("compact", width < 18)
+    document.body.classList.toggle("compact2", width < 24)
 }
