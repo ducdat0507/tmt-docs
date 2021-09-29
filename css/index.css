@@ -197,7 +197,7 @@ main {
     padding-right: 3rem;
 }
 
-code {
+code, code span {
     font-family: Consolas, monospace;
     padding-top: -.1rem;
     font-size: .9rem;
@@ -215,11 +215,18 @@ pre {
     overflow: auto;
 }
 
+.hljs-keyword { color: #eb34c0; font-style: oblique; }
+.hljs-attr { color: #b82fbd; }
+.hljs-literal { color: #00ccff; font-style: oblique; }
+.hljs-number { color: #31aeb0; }
+.hljs-string { color: #ffbf00; }
+.hljs-comment { opacity: .3; font-style: italic; }
+
 a {
-    color: #41f5f5
+    color: #41f5f5;
 }
 a:visited {
-    color: #f541f5
+    color: #f541f5;
 }
 
 .menu-button {

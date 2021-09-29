@@ -1,4 +1,5 @@
 let tmt, icon, contents, commands, main, converter, current, cItems;
+let target = "";
 
 function load() {
     tmt = document.querySelector("tmt")
@@ -6,7 +7,28 @@ function load() {
     contents = document.querySelector("contents")
     commands = document.querySelector("commands")
     main = document.querySelector("main")
-    converter = new showdown.Converter()
+    converter = new showdown.Converter({extensions: [
+        {
+            type: 'output',
+            regex: /<a\shref="(\S+\.md*?)">/g,
+            replace(x, p1) {
+                let p = target.replace(/(.*[\\\/$]).+$/s, "$1")
+                let u = p + p1.replace(/^[/\\]+/s, "")
+                // console.log(x + " " + p1 + " " + url + " " + p)
+                let e = contents.querySelector("item[href='" + u + "']")
+                if (!e) return `<a href="${p1}">`
+                let l = location
+                return `<a href="${l.origin}${l.pathname}#${e.getAttribute("hash")}">`
+            }
+        },
+        {
+            type: 'output',
+            regex: /<a\shref="\/(\S+\.(js|css|html)*?)">/g,
+            replace(x, p1) {
+                return `<a href="https://github.com/Acamaeda/The-Modding-Tree/blob/master/${p1}" target="_blank">`
+            }
+        },
+    ]})
     current = {}
     cItems = contents.childNodes
     
@@ -22,7 +44,6 @@ function load() {
             commands.classList.toggle("active")
         }
     });
-
     
     window.addEventListener('popstate', function() {
         var lHash = location.hash || "#home"
@@ -39,27 +60,22 @@ function load() {
 
 function readFile(url) {
     let elem = url.srcElement
-    url = elem.getAttribute("href");
+    target = url = elem.getAttribute("href");
     location.hash = "#" + elem.getAttribute("hash");
     document.title = elem.innerText + " - The Modding Tree Docs";
     let client = new XMLHttpRequest();
     client.open('GET', url.replace("$", "https://raw.githubusercontent.com/Acamaeda/The-Modding-Tree/master/docs/"));
     client.onreadystatechange = function() {
-        main.innerHTML = converter.makeHtml(client.responseText).replace(/<a\shref="(\S+\.md*?)">/g, (x, p1) => {
-            let p = url.replace(/(.*[\\\/$]).+$/s, "$1")
-            let u = p + p1.replace(/^[/\\]+/s, "")
-            // console.log(x + " " + p1 + " " + url + " " + p)
-            let e = contents.querySelector("item[href='" + u + "']")
-            if (!e) return `<a href="${p1}">`
-            let l = location
-            return `<a href="${l.origin}${l.pathname}#${e.getAttribute("hash")}">`
-        }).replace(/<a\shref="\/(\S+\.js*?)">/g, (x, p1) => {
-            return `<a href="https://github.com/Acamaeda/The-Modding-Tree/blob/master/${p1}" target="_blank">`
-        })
+        main.innerHTML = converter.makeHtml(client.responseText)
         if (current && current.classList) current.classList.remove("current")
         current = elem
         current.classList.add("current")
         contents.classList.remove("active")
+        contents.scrollTo(0,0)
+        main.querySelectorAll('pre code').forEach(el => {
+            console.log(el.innerHTML)
+            el.innerHTML = hljs.highlight(el.classList[0], el.innerText).value
+        })
     }
     client.send();
 }
